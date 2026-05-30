@@ -1,4 +1,4 @@
-# GOST Port Forwarder
+# GOST Port Forwarder NAT
 
 一个简单的 GOST TCP/UDP 端口转发一键安装脚本，适合把公网服务器端口转发到内网 `10.0.0.x` 机器。
 
@@ -15,7 +15,7 @@
 ## 一键安装
 
 ```bash
-wget -O install_gost_forward.sh https://raw.githubusercontent.com/xihuan0526/gost-port-forwarder/main/install_gost_forward.sh
+wget -O install_gost_forward.sh https://raw.githubusercontent.com/xihuan0526/Gost-Port-Forwarder-NAT/main/install_gost_forward.sh
 chmod +x install_gost_forward.sh
 sudo ./install_gost_forward.sh
 ```
