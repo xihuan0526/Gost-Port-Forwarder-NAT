@@ -59,8 +59,9 @@ systemctl restart gost-forward
 
 脚本会自动：
 
-1. 安装基础依赖；
-2. 识别 CPU 架构；
-3. 从 GOST GitHub Release 下载最新 Linux 版本；
-4. 生成 `/root/gost/start.sh`；
-5. 创建并启动 `gost-forward.service`。
+1. 检测基础命令是否已存在，已满足则跳过依赖安装；
+2. 安装缺少的基础依赖；
+3. 识别 CPU 架构；
+4. 从 GOST GitHub Release 下载最新 Linux 版本；
+5. 生成 `/root/gost/start.sh`；
+6. 创建并启动 `gost-forward.service`。

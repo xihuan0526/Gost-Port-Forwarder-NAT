@@ -32,18 +32,65 @@ need_root() {
 }
 
 install_deps() {
-  local packages=(curl tar gzip ca-certificates grep sed coreutils)
+  local missing=()
+  local cmd pkg
+
+  for cmd in curl tar gzip grep sed find install head; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [ "${#missing[@]}" -eq 0 ]; then
+    echo "依赖已满足，跳过安装。"
+    return
+  fi
+
+  echo "缺少依赖命令：${missing[*]}，开始安装..."
+
   if command -v dnf >/dev/null 2>&1; then
-    dnf install -y "${packages[@]}" findutils
+    local packages=()
+    for cmd in "${missing[@]}"; do
+      case "$cmd" in
+        install|head) pkg="coreutils" ;;
+        *) pkg="$cmd" ;;
+      esac
+      [[ " ${packages[*]} " == *" $pkg "* ]] || packages+=("$pkg")
+    done
+    dnf install -y "${packages[@]}"
   elif command -v yum >/dev/null 2>&1; then
-    yum install -y "${packages[@]}" findutils
+    local packages=()
+    for cmd in "${missing[@]}"; do
+      case "$cmd" in
+        install|head) pkg="coreutils" ;;
+        *) pkg="$cmd" ;;
+      esac
+      [[ " ${packages[*]} " == *" $pkg "* ]] || packages+=("$pkg")
+    done
+    yum install -y "${packages[@]}"
   elif command -v apt-get >/dev/null 2>&1; then
+    local packages=()
+    for cmd in "${missing[@]}"; do
+      case "$cmd" in
+        install|head) pkg="coreutils" ;;
+        *) pkg="$cmd" ;;
+      esac
+      [[ " ${packages[*]} " == *" $pkg "* ]] || packages+=("$pkg")
+    done
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}" findutils
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
   elif command -v apk >/dev/null 2>&1; then
-    apk add --no-cache "${packages[@]}" findutils
+    local packages=()
+    for cmd in "${missing[@]}"; do
+      case "$cmd" in
+        install|head) pkg="coreutils" ;;
+        *) pkg="$cmd" ;;
+      esac
+      [[ " ${packages[*]} " == *" $pkg "* ]] || packages+=("$pkg")
+    done
+    apk add --no-cache "${packages[@]}"
   else
-    echo "未识别包管理器，请先安装：curl tar gzip ca-certificates findutils grep sed coreutils" >&2
+    echo "未识别包管理器，请先安装缺少命令：${missing[*]}" >&2
     exit 1
   fi
 }
