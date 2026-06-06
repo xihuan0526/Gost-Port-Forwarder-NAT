@@ -14,6 +14,7 @@ SERVICE_FILE="${SERVICE_FILE:-/etc/systemd/system/gost-forward.service}"
 
 IP_PREFIX="${IP_PREFIX:-10.0.0}"
 IP_START="${IP_START:-2}"
+IP_END_WAS_SET="${IP_END+x}"
 IP_END="${IP_END:-254}"
 SSH_BASE_PORT="${SSH_BASE_PORT:-10000}"
 BUSINESS_BASE_PORT="${BUSINESS_BASE_PORT:-20000}"
@@ -60,7 +61,7 @@ download_gost() {
   local arch asset_url tmpdir found
   arch="$(detect_arch)"
   tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' EXIT
+  trap 'rm -rf "${tmpdir:-}"' EXIT
 
   echo "正在获取 GOST 最新版本下载地址（linux/$arch）..."
   asset_url="$(
@@ -92,6 +93,40 @@ download_gost() {
 
   install -m 0755 "$found" "$GOST_BIN"
   "$GOST_BIN" -V || true
+}
+
+prompt_ip_range() {
+  if [ -n "$IP_END_WAS_SET" ]; then
+    return
+  fi
+
+  if [ ! -t 0 ]; then
+    echo "未检测到交互终端，使用默认范围：${IP_PREFIX}.${IP_START}-${IP_PREFIX}.${IP_END}"
+    return
+  fi
+
+  local input ssh_start ssh_end port_start port_end
+  while true; do
+    read -r -p "请输入结束内网 IP 末位，默认 ${IP_END}（范围 ${IP_START}-254，直接回车使用默认）：" input
+    input="${input:-$IP_END}"
+    if [[ "$input" =~ ^[0-9]+$ ]] && [ "$input" -ge "$IP_START" ] && [ "$input" -le 254 ]; then
+      IP_END="$input"
+      break
+    fi
+    echo "输入不合法，请输入 ${IP_START}-254 之间的数字。"
+  done
+
+  ssh_start=$((SSH_BASE_PORT + IP_START))
+  ssh_end=$((SSH_BASE_PORT + IP_END))
+  port_start=$((BUSINESS_BASE_PORT + IP_START * PORTS_PER_IP))
+  port_end=$((BUSINESS_BASE_PORT + IP_END * PORTS_PER_IP + PORTS_PER_IP - 1))
+
+  echo
+  echo "将生成转发范围："
+  echo "- 内网 IP: ${IP_PREFIX}.${IP_START} - ${IP_PREFIX}.${IP_END}"
+  echo "- SSH: ${ssh_start} - ${ssh_end}"
+  echo "- 业务端口: ${port_start} - ${port_end}"
+  echo
 }
 
 validate_config() {
@@ -192,6 +227,7 @@ print_summary() {
 
 main() {
   need_root
+  prompt_ip_range
   install_deps
   download_gost
   validate_config
