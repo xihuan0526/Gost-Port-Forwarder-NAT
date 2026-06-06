@@ -3,9 +3,9 @@ set -Eeuo pipefail
 
 # GOST TCP/UDP 端口转发一键安装脚本
 # 默认规则：
-#   SSH:       10002-10099  -> 10.0.0.2-10.0.0.99:22
-#   TCP 业务:  20020-20999  -> 10.0.0.2-10.0.0.99:20020-20999
-#   UDP 业务:  20020-20999  -> 10.0.0.2-10.0.0.99:20020-20999
+#   SSH:       10002-10254  -> 10.0.0.2-10.0.0.254:22
+#   TCP 业务:  20020-22549  -> 10.0.0.2-10.0.0.254:20020-22549
+#   UDP 业务:  20020-22549  -> 10.0.0.2-10.0.0.254:20020-22549
 
 GOST_DIR="${GOST_DIR:-/root/gost}"
 GOST_BIN="${GOST_BIN:-$GOST_DIR/gost}"
@@ -14,7 +14,7 @@ SERVICE_FILE="${SERVICE_FILE:-/etc/systemd/system/gost-forward.service}"
 
 IP_PREFIX="${IP_PREFIX:-10.0.0}"
 IP_START="${IP_START:-2}"
-IP_END="${IP_END:-99}"
+IP_END="${IP_END:-254}"
 SSH_BASE_PORT="${SSH_BASE_PORT:-10000}"
 BUSINESS_BASE_PORT="${BUSINESS_BASE_PORT:-20000}"
 PORTS_PER_IP="${PORTS_PER_IP:-10}"
@@ -179,8 +179,8 @@ EOF
 print_summary() {
   echo
   echo "安装完成。转发规则："
-  echo "- SSH: ${SSH_BASE_PORT}+IP末位，例如 10002 -> ${IP_PREFIX}.2:22，10099 -> ${IP_PREFIX}.99:22"
-  echo "- 业务端口: 每个 IP 10 个端口，例如 20020-20029 -> ${IP_PREFIX}.2，20990-20999 -> ${IP_PREFIX}.99"
+  echo "- SSH: ${SSH_BASE_PORT}+IP末位，例如 10002 -> ${IP_PREFIX}.2:22，10254 -> ${IP_PREFIX}.254:22"
+  echo "- 业务端口: 每个 IP 10 个端口，例如 20020-20029 -> ${IP_PREFIX}.2，22540-22549 -> ${IP_PREFIX}.254"
   echo "- UDP 转发: $([ "$ENABLE_UDP" = "1" ] && echo '已启用' || echo '未启用')"
   echo "- 日志限流: ${LOG_RATE_INTERVAL} / ${LOG_RATE_BURST} 条"
   echo
